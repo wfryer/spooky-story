@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin a Spooky Story</title>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THEME & CSS VARIABLES
+   Change colors here to restyle the whole page
+============================================================ */
+:root {
+  --bone:         #f3ead3;
+  --bone-dark:    #e4d6ae;
+  --bone-deep:    #cdb87e;
+  --ink:          #241433;
+  --ink-light:    #4a2f63;
+  --pumpkin:      #ff7518;
+  --pumpkin-dark: #cc5500;
+  --witch:        #7b2cbf;
+  --witch-light:  #9d4edd;
+  --slime:        #7cb518;
+  --slime-light:  #9ed13e;
+  --shadow:       rgba(20,8,32,0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: #150a22;
+  background-image:
+    radial-gradient(ellipse at 15% 20%, rgba(123,44,191,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(255,117,24,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 90%, rgba(124,181,24,0.1) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Ccircle cx='10' cy='10' r='1.5'/%3E%3Ccircle cx='40' cy='28' r='1'/%3E%3Ccircle cx='25' cy='45' r='1.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  font-family: 'Baloo 2', 'Comic Sans MS', sans-serif;
+  color: var(--bone);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* ============================================================
+   PAGE HEADER
+============================================================ */
+header { text-align: center; padding: 30px 20px 20px; }
+
+header h1 {
+  font-family: 'Creepster', cursive;
+  font-size: clamp(2.1rem, 5.5vw, 3.6rem);
+  color: var(--pumpkin);
+  text-shadow: 0 0 18px rgba(255,117,24,0.55), 3px 3px 0 var(--ink), -1px -1px 0 var(--ink);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+header p.subtitle {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--bone-dark);
+  opacity: 0.9;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin: 12px auto;
+  max-width: 500px;
+}
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--pumpkin), transparent);
+}
+.divider-gem { font-size: 1.1rem; }
+
+/* ============================================================
+   MAIN LAYOUT
+============================================================ */
+.app-container { max-width: 1250px; margin: 0 auto; }
+
+.wheels-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 26px;
+  align-items: flex-start;
+  padding: 10px 0;
+}
+
+/* ============================================================
+   WHEEL PANELS (the cards)
+============================================================ */
+.wheel-panel {
+  background: var(--bone);
+  background-image: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%);
+  border: 3px solid var(--bone-deep);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 30px rgba(205,184,126,0.25),
+    0 8px 32px var(--shadow),
+    0 0 0 1px rgba(123,44,191,0.25);
+  padding: 20px;
+  width: 310px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+.wheel-panel::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(123,44,191,0.3);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.wheel-title {
+  font-family: 'Creepster', cursive;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  text-align: center;
+}
+.wheel-title.character { color: var(--witch); }
+.wheel-title.setting    { color: var(--pumpkin-dark); }
+.wheel-title.plot       { color: var(--slime); text-shadow: 0 0 1px rgba(36,20,51,0.3); }
+
+/* ============================================================
+   CANVAS (the actual spinning wheel)
+============================================================ */
+canvas {
+  display: block;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 4px var(--bone-deep),
+    0 0 0 7px var(--ink),
+    0 6px 24px var(--shadow);
+  cursor: pointer;
+}
+
+/* ============================================================
+   SPIN BUTTON
+============================================================ */
+.spin-btn {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, var(--pumpkin-dark) 0%, var(--pumpkin) 50%, var(--pumpkin-dark) 100%);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 10px 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: all 0.2s ease;
+}
+.spin-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255,117,24,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ============================================================
+   RESULT DISPLAY (below each wheel)
+============================================================ */
+.result-box {
+  width: 100%;
+  min-height: 56px;
+  background: rgba(36,20,51,0.07);
+  border: 1px solid var(--bone-deep);
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s ease;
+}
+.result-box.empty {
+  color: var(--ink-light);
+  font-style: italic;
+  font-size: 0.95rem;
+  opacity: 0.6;
+}
+.result-text {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+/* ============================================================
+   REMOVE BUTTON (appears after a result)
+============================================================ */
+.remove-btn {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: var(--ink-light);
+  border: 1px solid var(--bone-deep);
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: all 0.2s ease;
+}
+.remove-btn:hover {
+  background: rgba(123,44,191,0.08);
+  border-color: var(--witch);
+  color: var(--witch);
+}
+
+/* ============================================================
+   CENTER CONTROLS
+============================================================ */
+.center-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 20px;
+}
+
+.spin-all-btn {
+  font-family: 'Creepster', cursive;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #4a1570 0%, var(--witch) 40%, var(--witch-light) 60%, #4a1570 100%);
+  color: var(--bone);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 44px;
+  cursor: pointer;
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.5),
+    0 0 0 2px var(--ink),
+    0 0 0 4px var(--pumpkin),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: all 0.25s ease;
+}
+.spin-all-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.6),
+    0 0 0 2px var(--ink),
+    0 0 0 4px var(--pumpkin),
+    0 0 22px rgba(255,117,24,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.spin-all-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.reset-btn {
+  font-family: 'Baloo 2', sans-serif;
+  font-style: italic;
+  font-size: 1rem;
+  background: transparent;
+  color: var(--bone-dark);
+  border: 1px solid rgba(243,234,211,0.3);
+  border-radius: 4px;
+  padding: 6px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.75;
+}
+.reset-btn:hover { opacity: 1; color: var(--pumpkin); border-color: var(--pumpkin); }
+
+/* ============================================================
+   COMBINED RESULT BANNER
+============================================================ */
+.combined-result {
+  background: var(--bone);
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(255,117,24,0.18) 0%, transparent 70%);
+  border: 2px solid var(--pumpkin);
+  border-radius: 12px;
+  padding: 26px 30px;
+  text-align: center;
+  margin: 10px 0 20px;
+  box-shadow: inset 0 0 30px rgba(205,184,126,0.15), 0 8px 32px var(--shadow);
+  max-width: 750px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: revealBanner 0.6s ease forwards;
+  display: none;
+}
+.combined-result.visible { display: block; }
+@keyframes revealBanner {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.combined-result h2 {
+  font-family: 'Creepster', cursive;
+  font-size: 1.6rem;
+  color: var(--witch);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.combined-result .combo-sentence {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.copy-btn {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: var(--slime);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.copy-btn:hover { background: var(--slime-light); transform: translateY(-1px); }
+.copy-hint { font-size: 0.85rem; color: var(--ink-light); margin-top: 8px; font-style: italic; min-height: 1.2em; }
+
+/* ============================================================
+   POINTER (the arrow on each wheel)
+============================================================ */
+.wheel-wrapper { position: relative; display: inline-block; }
+.pointer {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
+  border-right: 22px solid var(--witch);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+  z-index: 10;
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer {
+  text-align: center;
+  padding: 24px;
+  font-family: 'Baloo 2', sans-serif;
+  font-style: italic;
+  color: rgba(243,234,211,0.4);
+  font-size: 0.9rem;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 1060px) {
+  .wheels-row { flex-direction: column; align-items: center; }
+  .wheel-panel { width: 300px; }
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- ========================================================
+       PAGE HEADER
+  ========================================================= -->
+  <header>
+    <h1>🎃 Spin a Spooky Story 👻</h1>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-gem">🕸️</span>
+      <div class="divider-line"></div>
+    </div>
+    <p class="subtitle">Spin all three wheels to build your spooky story starter!</p>
+  </header>
+
+  <!-- ========================================================
+       WHEELS ROW
+  ========================================================= -->
+  <div class="wheels-row">
+
+    <!-- WHEEL 1 — CHARACTER -->
+    <div class="wheel-panel">
+      <div class="wheel-title character">🧙 Character</div>
+      <div class="wheel-wrapper">
+        <canvas id="wheel1" width="260" height="260"></canvas>
+        <div class="pointer"></div>
+      </div>
+      <button class="spin-btn" id="spinBtn1" onclick="spinWheel(0)">🎃 Spin</button>
+      <div class="result-box empty" id="result1"><span>Awaiting the spin…</span></div>
+      <button class="remove-btn" id="removeBtn1" style="display:none" onclick="removeResult(0)">✕ Remove &amp; Re-spin</button>
+    </div>
+
+    <!-- WHEEL 2 — SETTING -->
+    <div class="wheel-panel">
+      <div class="wheel-title setting">🏚️ Setting</div>
+      <div class="wheel-wrapper">
+        <canvas id="wheel2" width="260" height="260"></canvas>
+        <div class="pointer"></div>
+      </div>
+      <button class="spin-btn" id="spinBtn2" onclick="spinWheel(1)">🎃 Spin</button>
+      <div class="result-box empty" id="result2"><span>Awaiting the spin…</span></div>
+      <button class="remove-btn" id="removeBtn2" style="display:none" onclick="removeResult(1)">✕ Remove &amp; Re-spin</button>
+    </div>
+
+    <!-- WHEEL 3 — PLOT -->
+    <div class="wheel-panel">
+      <div class="wheel-title plot">⚡ Plot</div>
+      <div class="wheel-wrapper">
+        <canvas id="wheel3" width="260" height="260"></canvas>
+        <div class="pointer"></div>
+      </div>
+      <button class="spin-btn" id="spinBtn3" onclick="spinWheel(2)">🎃 Spin</button>
+      <div class="result-box empty" id="result3"><span>Awaiting the spin…</span></div>
+      <button class="remove-btn" id="removeBtn3" style="display:none" onclick="removeResult(2)">✕ Remove &amp; Re-spin</button>
+    </div>
+
+  </div><!-- /.wheels-row -->
+
+  <!-- ========================================================
+       CENTER CONTROLS
+  ========================================================= -->
+  <div class="center-controls">
+    <button class="spin-all-btn" id="spinAllBtn" onclick="spinAll()">✦ Spin All Three ✦</button>
+    <button class="reset-btn" onclick="resetAll()">↺ Reset Everything</button>
+  </div>
+
+  <!-- ========================================================
+       COMBINED RESULT BANNER
+       Appears when ALL THREE wheels have landed
+  ========================================================= -->
+  <div class="combined-result" id="combinedResult">
+    <h2>👻 Your Spooky Story Result 👻</h2>
+    <div class="combo-sentence" id="comboSentence"></div>
+    <button class="copy-btn" id="copyBtn" onclick="copyResult()">📋 Copy Story Result</button>
+    <div class="copy-hint" id="copyHint">Paste this into your "Notes and Credits"!</div>
+  </div>
+
+</div><!-- /.app-container -->
+
+<footer>Spin the wheels of fate ✦ Every combination makes a new spooky story</footer>
+
+<script>
+/* ================================================================
+   CONFIGURATION — EDIT YOUR WHEEL ITEMS HERE
+
+   Each item in a wheel needs:
+     name  — the label shown on the wheel and used in the story sentence
+     color — hex color for that slice (feel free to change these!)
+
+   To ADD an item: copy one entry and paste it into the array
+   To REMOVE an item: delete the entry from the array
+   To CHANGE colors: edit the hex values below
+================================================================ */
+
+/* ----------------------------------------------------------------
+   WHEEL 1: CHARACTER — who is the story about?
+---------------------------------------------------------------- */
+const wheel1Items = [
+  { name: "a weird wolf", color: "#7b2cbf" },
+  { name: "a lost little boy", color: "#ff7518" },
+  { name: "a picky panda", color: "#4a1570" },
+  { name: "a whining witch", color: "#cc5500" },
+  { name: "a bizarre ballerina", color: "#9d4edd" },
+  { name: "a bummed-out bat", color: "#5a3e7a" },
+  { name: "an angry pig", color: "#e8871e" },
+  { name: "four zany zombies", color: "#7cb518" },
+  { name: "a scared skeleton", color: "#cdb87e" },
+  { name: "an obnoxious owl", color: "#8c5a2b" },
+  { name: "two tired witches", color: "#6a1b9a" },
+  { name: "a YouTuber named Zee", color: "#ff8c3a" },
+  { name: "a gymnast named Emma", color: "#b56fd4" },
+  { name: "a confused old man", color: "#9e8b5c" },
+  { name: "a slow, clumsy mummy", color: "#d9c48f" },
+  { name: "a magical mommy", color: "#a347d9" },
+  { name: "an impatient queen", color: "#8e24aa" },
+  { name: "a dishonest detective", color: "#4e3b6b" },
+  { name: "a gigantic clown", color: "#ff9800" },
+  { name: "a hungry vampire", color: "#7b1e3a" },
+  { name: "a former werewolf", color: "#5c4a3d" },
+  { name: "a lonely scarecrow", color: "#c8860d" },
+  { name: "a sly spider", color: "#2e2440" },
+  { name: "a goodhearted ghost", color: "#b8a9d9" },
+];
+
+/* ----------------------------------------------------------------
+   WHEEL 2: SETTING — where / when does it happen?
+---------------------------------------------------------------- */
+const wheel2Items = [
+  { name: "in the middle of nowhere", color: "#ff7518" },
+  { name: "under a heap of rotten leaves", color: "#7cb518" },
+  { name: "lying in the dentist's chair", color: "#9d4edd" },
+  { name: "in a corn maze", color: "#cc5500" },
+  { name: "next to a haunted castle", color: "#4a1570" },
+  { name: "hiding under a pile of pumpkins", color: "#ff8c3a" },
+  { name: "outside an old cabin", color: "#8c5a2b" },
+  { name: "in a McDonald's drive-thru", color: "#e8871e" },
+  { name: "at midnight in the cemetery", color: "#2e2440" },
+  { name: "at a party only for ghosts", color: "#b8a9d9" },
+  { name: "while washing the dishes", color: "#7b2cbf" },
+  { name: "near a huge bonfire", color: "#ff9800" },
+  { name: "at the costume shop", color: "#9e8b5c" },
+  { name: "before the fancy dinner", color: "#6a1b9a" },
+  { name: "after an earthquake", color: "#5c4a3d" },
+  { name: "while waiting for the bus", color: "#c8860d" },
+  { name: "during music class", color: "#a347d9" },
+  { name: "in the school's stairwell", color: "#8e24aa" },
+  { name: "at the police station", color: "#4e3b6b" },
+  { name: "while trick-or-treating", color: "#ff7518" },
+  { name: "while riding a broomstick", color: "#5a3e7a" },
+  { name: "during a slumber party", color: "#d9c48f" },
+  { name: "on a rowboat at 3 AM", color: "#7b1e3a" },
+  { name: "in a chilly cabin", color: "#cdb87e" },
+];
+
+/* ----------------------------------------------------------------
+   WHEEL 3: PLOT — what happens to them?
+---------------------------------------------------------------- */
+const wheel3Items = [
+  { name: "heard a frightening noise", color: "#7b2cbf" },
+  { name: "got a flat bike tire", color: "#ff7518" },
+  { name: "had to retake a test", color: "#4a1570" },
+  { name: "ate way too much candy", color: "#cc5500" },
+  { name: "put on the wrong costume", color: "#9d4edd" },
+  { name: "searched for a missing cat", color: "#5a3e7a" },
+  { name: "accidentally ate a bug", color: "#7cb518" },
+  { name: "lost their memory", color: "#cdb87e" },
+  { name: "felt extremely dizzy", color: "#8c5a2b" },
+  { name: "couldn't see a thing", color: "#6a1b9a" },
+  { name: "heard mysterious whispers", color: "#2e2440" },
+  { name: "grew an extra eye", color: "#b56fd4" },
+  { name: "forgot to say goodbye", color: "#9e8b5c" },
+  { name: "kissed a frog", color: "#d9c48f" },
+  { name: "got toothpaste everywhere", color: "#a347d9" },
+  { name: "couldn't sleep all night", color: "#8e24aa" },
+  { name: "saw a green ghost", color: "#4e3b6b" },
+  { name: "fell in love with a scarecrow", color: "#ff9800" },
+  { name: "spent too much money", color: "#7b1e3a" },
+  { name: "lost a magic wand", color: "#5c4a3d" },
+  { name: "fell into a well", color: "#c8860d" },
+  { name: "smelled something strange", color: "#ff8c3a" },
+  { name: "wanted to prank a friend", color: "#b8a9d9" },
+  { name: "could not find their way home", color: "#e8871e" },
+];
+
+/* ================================================================
+   INTERNAL STATE — no need to edit below this line
+================================================================ */
+const wheels = [
+  { items: wheel1Items, canvas: null, ctx: null, angle: 0, spinning: false, result: null },
+  { items: wheel2Items, canvas: null, ctx: null, angle: 0, spinning: false, result: null },
+  { items: wheel3Items, canvas: null, ctx: null, angle: 0, spinning: false, result: null },
+];
+
+/* ================================================================
+   DRAWING FUNCTIONS
+================================================================ */
+function drawWheel(idx) {
+  const w = wheels[idx];
+  const ctx = w.ctx;
+  const items = w.items;
+  const cx = w.canvas.width / 2;
+  const cy = w.canvas.height / 2;
+  const radius = cx - 4;
+  const sliceAngle = (2 * Math.PI) / items.length;
+
+  ctx.clearRect(0, 0, w.canvas.width, w.canvas.height);
+
+  items.forEach((item, i) => {
+    const startAngle = w.angle + i * sliceAngle;
+    const endAngle = startAngle + sliceAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = item.color;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(20,8,32,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + sliceAngle / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,0.75)';
+    ctx.shadowBlur = 3;
+    ctx.font = `bold ${items.length > 20 ? 9 : 10}px 'Baloo 2', sans-serif`;
+    let label = item.name;
+    if (label.length > 16) label = label.slice(0, 15) + '…';
+    ctx.fillText(label, radius - 8, 3);
+    ctx.restore();
+  });
+
+  /* Center hub */
+  ctx.beginPath();
+  ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+  ctx.fillStyle = '#f3ead3';
+  ctx.fill();
+  ctx.strokeStyle = '#241433';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 13, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#ff7518';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+/* ================================================================
+   SPINNING LOGIC
+================================================================ */
+function spinWheel(idx) {
+  const w = wheels[idx];
+  if (w.spinning) return;
+
+  clearResult(idx);
+  w.spinning = true;
+  setButtonsDisabled(true);
+
+  const totalRotation = (Math.random() * 5 + 5) * 2 * Math.PI;
+  const duration = 3000 + Math.random() * 1500;
+  const startAngle = w.angle;
+  const startTime = performance.now();
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    w.angle = startAngle + totalRotation * eased;
+    drawWheel(idx);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      w.spinning = false;
+      landWheel(idx);
+      setButtonsDisabled(false);
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function landWheel(idx) {
+  const w = wheels[idx];
+  const items = w.items;
+  const sliceAngle = (2 * Math.PI) / items.length;
+  const normalizedAngle = ((w.angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const pointerAngle = (2 * Math.PI - normalizedAngle) % (2 * Math.PI);
+  const sliceIndex = Math.floor(pointerAngle / sliceAngle) % items.length;
+  w.result = items[sliceIndex];
+  showResult(idx, w.result);
+  maybeShowCombined();
+}
+
+/* ================================================================
+   RESULT DISPLAY
+================================================================ */
+function showResult(idx, item) {
+  const box = document.getElementById(`result${idx + 1}`);
+  box.classList.remove('empty');
+  box.innerHTML = `<span class="result-text">${item.name}</span>`;
+  document.getElementById(`removeBtn${idx + 1}`).style.display = 'inline-block';
+}
+
+function clearResult(idx) {
+  const box = document.getElementById(`result${idx + 1}`);
+  box.classList.add('empty');
+  box.innerHTML = '<span>Awaiting the spin…</span>';
+  document.getElementById(`removeBtn${idx + 1}`).style.display = 'none';
+  wheels[idx].result = null;
+  hideCombined();
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Show the combined banner when ALL THREE wheels have a result. */
+function maybeShowCombined() {
+  const r0 = wheels[0].result;
+  const r1 = wheels[1].result;
+  const r2 = wheels[2].result;
+  if (!r0 || !r1 || !r2) return;
+
+  const sentence = `${capitalize(r0.name)}, ${r1.name}, ${r2.name}.`;
+  document.getElementById('comboSentence').textContent = sentence;
+  document.getElementById('copyHint').textContent = 'Paste this into your "Notes and Credits"!';
+
+  const banner = document.getElementById('combinedResult');
+  banner.classList.add('visible');
+}
+
+function hideCombined() {
+  document.getElementById('combinedResult').classList.remove('visible');
+}
+
+function copyResult() {
+  const text = document.getElementById('comboSentence').textContent;
+  const hint = document.getElementById('copyHint');
+  navigator.clipboard.writeText(text).then(() => {
+    hint.textContent = '✅ Copied! Now paste it into your Notes and Credits.';
+  }).catch(() => {
+    hint.textContent = 'Could not auto-copy — just select and copy the text above.';
+  });
+}
+
+/* ================================================================
+   BUTTON ACTIONS
+================================================================ */
+function removeResult(idx) {
+  clearResult(idx);
+}
+
+function spinAll() {
+  if (wheels.some(w => w.spinning)) return;
+  wheels.forEach((w, i) => clearResult(i));
+  hideCombined();
+  wheels.forEach((w, i) => setTimeout(() => spinWheel(i), i * 200));
+}
+
+function resetAll() {
+  if (wheels.some(w => w.spinning)) return;
+  wheels.forEach((w, i) => {
+    w.angle = 0;
+    w.result = null;
+    drawWheel(i);
+    clearResult(i);
+  });
+  hideCombined();
+}
+
+function setButtonsDisabled(disabled) {
+  ['spinBtn1', 'spinBtn2', 'spinBtn3', 'spinAllBtn'].forEach(id => {
+    document.getElementById(id).disabled = disabled;
+  });
+}
+
+/* ================================================================
+   INIT — runs on page load
+================================================================ */
+window.addEventListener('load', () => {
+  wheels.forEach((w, i) => {
+    w.canvas = document.getElementById(`wheel${i + 1}`);
+    w.ctx = w.canvas.getContext('2d');
+    w.angle = Math.random() * 2 * Math.PI;
+    drawWheel(i);
+  });
+});
+</script>
+</body>
+</html>
